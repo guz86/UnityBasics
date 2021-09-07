@@ -4,10 +4,18 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    [SerializeField] public Transform graundCheckTransform = null;
+    [SerializeField] private LayerMask playerField;
+    private bool jumpKeyWasPressed;
+    private float gorizontalInput;
+    private Rigidbody rigidbodyComponent;
+    private int superJumpsRemaning;
+
+
     // Start is called before the first frame update
     void Start()
     {
-        
+        rigidbodyComponent = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
@@ -16,19 +24,41 @@ public class Player : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.W))
         {
             // Debug.Log("Space Key Down");
-            GetComponent<Rigidbody>().AddForce(Vector3.up *3, ForceMode.VelocityChange);
+            jumpKeyWasPressed = true;
         }
-        if (Input.GetKeyDown(KeyCode.S))
+
+        gorizontalInput = Input.GetAxis("Horizontal");
+    }
+
+    private void FixedUpdate()
+    {
+        rigidbodyComponent.velocity = new Vector3(gorizontalInput, rigidbodyComponent.velocity.y, 0);
+
+        if (Physics.OverlapSphere(graundCheckTransform.position,0.1f, playerField).Length == 0 )
         {
-            GetComponent<Rigidbody>().AddForce(Vector3.down * 3, ForceMode.VelocityChange);
+            return;
         }
-        if (Input.GetKeyDown(KeyCode.D))
+       
+        if (jumpKeyWasPressed)
         {
-            GetComponent<Rigidbody>().AddForce(Vector3.right * 3, ForceMode.VelocityChange);
+            float jumpPower = 5f;
+            if (superJumpsRemaning > 0)
+            {
+                jumpPower *= 1.5f;
+                superJumpsRemaning--;
+            }
+            // Debug.Log("Space Key Down");
+            rigidbodyComponent.AddForce(Vector3.up * jumpPower, ForceMode.VelocityChange);
+            jumpKeyWasPressed = false;
         }
-        if (Input.GetKeyDown(KeyCode.A))
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.layer == 7)
         {
-            GetComponent<Rigidbody>().AddForce(Vector3.left * 3, ForceMode.VelocityChange);
+            Destroy(other.gameObject);
+            superJumpsRemaning++;
         }
     }
 }
